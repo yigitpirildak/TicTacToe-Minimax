@@ -6,7 +6,7 @@ class TicTacModel:
 
     def __init__(self):
         self.model = Sequential()
-        self.model.add(Dense(32, input_dim=9, activation='relu'))
+        self.model.add(Dense(32, input_dim=10, activation='relu'))
         self.model.add(Dropout(0.4))
         self.model.add(Dense(32, activation='relu'))
         self.model.add(Dense(9, activation='sigmoid'))

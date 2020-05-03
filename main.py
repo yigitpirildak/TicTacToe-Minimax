@@ -1,99 +1,52 @@
-from ticTacBoard import TicTacBoard, Mark, BoardState
 from memory import Memory
 from model import TicTacModel
+from ticTacBoard import TicTacBoard
+from p5 import *
+import random
 import numpy as np
 
+ticTacBoard = None
+SIZE = 300
 
-class TicTacGame:
+def setup():
+    global ticTacBoard
+    size(SIZE, SIZE)
+    ticTacBoard = TicTacBoard(SIZE)
 
-    def __init__(self):
-        self.board = TicTacBoard()
+def draw():
+    background(24)
+    size_per_square = SIZE/3
+    ticTacBoard.draw()
 
-    def get_board(self):
-        return self.board.get_board()
 
-    def get_normalized_board(self):
-        return np.arange(self.board.get_board()) / 3  # 3 is the maximum possible value
-
-    def print_board(self):
-        return self.board.print_board()
-
-    def make_move(self, coordinates, mark):
-        board_state = self.board.make_move(self, coordinates, mark)
-        terminal = True
-        if board_state == BoardState.ONGOING:
-            terminal = False
-
-        reward = self.calculate_reward(mark)
-        return terminal, reward
-
-    def calculate_reward(self, mark):
-        reward = 0
-        if self.board.get_board_state() == BoardState.DRAW:
-            reward = 5
-        elif self.board.get_board_state() == BoardState.WINNER_X:
-            reward = 50
-        elif self.board.get_board_state() == BoardState.Winner_Y:
-            reward = -50
-        else:
-            current_board = self.board.get_board()
-            x_close_to_win, o_close_to_win = self.__get_closeness_to_win()
-            if mark == Mark.X.value:
-                reward = x_close_to_win*10 - o_close_to_win * 25
-            else:
-                reward = o_close_to_win*10 - x_close_to_win * 25
-        return reward
-
-    def __get_closeness_to_win(self):
-        x_close_to_win = 0
-        o_close_to_win = 0
-        current_board = self.board.get_board()
-
-        for i in range(0, len(current_board)):
-            x_close_to_win, o_close_to_win = max(self.__check_if_close_to_win(current_board[i][0],
-                                                                              current_board[i][1],
-                                                                              current_board[i][2]),
-                                                 (x_close_to_win, o_close_to_win))
-
-        for i in range(0, len(current_board[0])):
-            x_close_to_win, o_close_to_win = max(self.__check_if_close_to_win(current_board[0][i],
-                                                                              current_board[1][i],
-                                                                              current_board[2][i]),
-                                                 (x_close_to_win, o_close_to_win))
-
-        # Diagonals
-        x_close_to_win, o_close_to_win = max(self.__check_if_close_to_win(current_board[0][0],
-                                                                          current_board[1][1],
-                                                                          current_board[2][2]),
-                                             (x_close_to_win, o_close_to_win))
-
-        x_close_to_win, o_close_to_win = max(self.__check_if_close_to_win(current_board[0][2],
-                                                                          current_board[1][1],
-                                                                          current_board[2][0]),
-                                             (x_close_to_win, o_close_to_win))
-
-        return x_close_to_win, o_close_to_win
-
-    def __check_if_close_to_win(self, first, second, third):
-        xor = first ^ second ^ third ^ Mark.EMPTY.value  # Check if 2 Mark + Empty is found
-        sum = first + second + third
-
-        x_close_to_win = 0
-        o_close_to_win = 0
-        if sum != Mark.EMPTY.value and xor == Mark.EMPTY.value:
-            if first | second | third == Mark.X.value:
-                x_close_to_win = 1
-            else:
-                o_close_to_win = 1
-
-        return x_close_to_win, o_close_to_win
-
+    if mouse_is_pressed:
+        ticTacBoard.make_move(mouse_x, mouse_y)
 
 if __name__ == "__main__":
-    ticTacGame = TicTacGame()
-    memory = Memory()
+    run()
+    """memory = Memory()
     model = TicTacModel()
-    while True:
+    for i in range(0, 20):
+        ticTacGame = TicTacGame()
         terminal = False
+        turnToPlay = Mark.X
+        x_train = np.array([])
+        y_train = np.array([])
         while not terminal:
-            print(ticTacGame.get_normalized_board())
+            print("Turn To Play = " + turnToPlay.name)
+            rewards = np.ndarray(9)
+            current_state = ticTacGame.get_normalized_board_with_player(turnToPlay)
+            prediction = int(np.argmax(model.predict(np.array([ticTacGame.get_normalized_board_with_player(turnToPlay)]))))
+            actual_reward, terminal = ticTacGame.make_move((int(prediction / 3), int(prediction % 3)), turnToPlay)
+            while actual_reward == -100:
+                rewards[prediction] = actual_reward
+                prediction = random.randrange(0, 9)
+                actual_reward, terminal = ticTacGame.make_move((int(prediction / 3), int(prediction % 3)), turnToPlay)
+            rewards[prediction] = actual_reward
+            x_train = np.insert(x_train, x_train.size, current_state)
+            y_train = np.insert(y_train, y_train.size, rewards / max(abs(np.max(rewards)), abs(np.min(rewards))))
+
+            turnToPlay = Mark.X if turnToPlay == Mark.O else Mark.O
+        ticTacGame.print_board()
+        model.train(x_train.reshape(int(x_train.size / 10), 10), y_train.reshape(int(y_train.size / 9), 9))
+"""
