@@ -21,10 +21,33 @@ class TicTacBoard:
         self.turnToPlay = Mark.X
         self.mark_size = int(self.size_per_square / 2)
         self.winningMarks = []
+        self.state = State.ONGOING
+        self.winner = None
+        self.moves = []
 
     def draw(self):
         self.__draw_background()
         self.__draw_board_state()
+
+    def get_turn_to_play(self):
+        return self.turnToPlay
+
+    def get_state(self):
+        return self.state
+
+    def get_winner(self):
+        return self.winner
+
+    def get_board(self):
+        return self.boardMatrix
+
+    def get_possible_moves(self):
+        possibleMoves = []
+        for x in range(0,3):
+            for y in range(0,3):
+                if self.boardMatrix[x][y] is Mark.EMPTY.value:
+                    possibleMoves.append((x,y))
+        return possibleMoves
 
     def __draw_background(self):
         stroke_weight(5)
@@ -47,17 +70,38 @@ class TicTacBoard:
                         fill(255)
                     text(state.name, (self.size_per_square * x + self.size_per_square / 2 - self.mark_size / 2, self.size_per_square * y + self.size_per_square / 2 - self.mark_size))
 
-    def make_move(self, mouse_x, mouse_y):
+    def make_ui_move(self, mouse_x, mouse_y):
+        if (self.state is State.OVER):
+            return
+
         x = int(mouse_x / self.size_per_square)
         y = int(mouse_y / self.size_per_square)
+        self.make_move((x,y))
+
+    def make_move(self, coordinates):
+        x = coordinates[0]
+        y = coordinates[1]
         if (self.boardMatrix[x][y] == Mark.EMPTY.value):
             self.boardMatrix[x][y] = self.turnToPlay.value
             self.__switch_players()
+            self.__update_board_state()
+            self.moves.append(coordinates)
 
-            board_eval = self.evaluate_board_state()
-            print(board_eval)
-            if (board_eval[0] is State.OVER):
-                self.winningMarks = board_eval[2:]
+    def undo(self):
+        lastMove = self.moves.pop()
+        if lastMove:
+            self.boardMatrix[lastMove[0]][lastMove[1]] = Mark.EMPTY.value
+            self.__switch_players()
+            self.__update_board_state()
+
+    def __update_board_state(self):
+        board_eval = self.evaluate_board_state()
+        self.state = board_eval[0]
+        self.winningMarks = []
+        self.winner = None
+        if (self.state is State.OVER):
+            self.winningMarks = board_eval[2:]
+            self.winner = board_eval[1]
 
     def __switch_players(self):
         self.turnToPlay = Mark.X if self.turnToPlay is Mark.O else Mark.O
