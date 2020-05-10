@@ -1,5 +1,3 @@
-Keras
 numpy
-tensorflow
 glfw
 p5

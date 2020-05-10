@@ -1,9 +1,5 @@
-from memory import Memory
-from model import TicTacModel
 from ticTacBoard import TicTacBoard, State, Mark
 from p5 import *
-import random
-import numpy as np
 import math
 
 ticTacBoard = None
