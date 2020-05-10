@@ -12,5 +12,3 @@ Once pre-requisites of p5 are met, install the required packages:
 sudo apt-get install python3-pip
 pip3 install -r requirements.txt
 ```
-
-
